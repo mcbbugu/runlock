@@ -11,9 +11,19 @@ export async function audit(cmd: string[], cwd: string, outPath: string): Promis
   const files = new Set<string>();
   const tcp = new Map<string, TcpPeer>();
 
+  const exit = new Promise<number | null>((resolve) => {
+    if (child.exitCode != null) {
+      resolve(child.exitCode);
+      return;
+    }
+    child.once("exit", (code) => resolve(code));
+    child.once("error", () => resolve(127));
+  });
+
   const tick = async () => {
-    if (child.pid == null) return;
-    const text = await lsof(child.pid);
+    const pid = child.pid;
+    if (pid == null || child.exitCode != null) return;
+    const text = await lsof(pid);
     const parsed = parseLsof(text);
     for (const f of parsed.files) files.add(f);
     for (const t of parsed.tcp) tcp.set(`${t.local}->${t.peer}`, t);
@@ -22,12 +32,9 @@ export async function audit(cmd: string[], cwd: string, outPath: string): Promis
   const iv = setInterval(() => {
     void tick();
   }, 250);
-  await tick();
+  void tick();
 
-  const exit = await new Promise<number | null>((resolve) => {
-    child.on("exit", (code) => resolve(code));
-    child.on("error", () => resolve(127));
-  });
+  const code = await exit;
   clearInterval(iv);
   await tick();
 
@@ -38,7 +45,7 @@ export async function audit(cmd: string[], cwd: string, outPath: string): Promis
     cwd,
     startedAt,
     durationMs: Date.now() - started,
-    exit,
+    exit: code,
     tcp: [...tcp.values()],
     writes: classified.writes,
     sensitive: classified.sensitive,
@@ -49,13 +56,21 @@ export async function audit(cmd: string[], cwd: string, outPath: string): Promis
 
 async function lsof(pid: number): Promise<string> {
   return await new Promise((resolve) => {
-    const p = spawn("lsof", ["-nP", "-p", String(pid)], { stdio: ["ignore", "pipe", "ignore"] });
+    const p = spawn("lsof", ["-nP", "-w", "-p", String(pid)], { stdio: ["ignore", "pipe", "ignore"] });
     let out = "";
+    const done = (s: string) => {
+      clearTimeout(t);
+      resolve(s);
+    };
+    const t = setTimeout(() => {
+      p.kill();
+      done(out);
+    }, 800);
     p.stdout.on("data", (b) => {
       out += String(b);
     });
-    p.on("close", () => resolve(out));
-    p.on("error", () => resolve(""));
+    p.on("close", () => done(out));
+    p.on("error", () => done(""));
   });
 }
 
