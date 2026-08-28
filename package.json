@@ -1,0 +1,25 @@
+{
+  "name": "runlock",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "description": "Audit a command on your laptop, lock what it touched, rerun it under a macOS seatbelt.",
+  "author": "mcbbugu",
+  "bin": { "runlock": "dist/cli.js" },
+  "files": ["dist"],
+  "engines": { "node": ">=20" },
+  "keywords": ["cli", "sandbox", "seatbelt", "audit", "supply-chain", "macos"],
+  "repository": { "type": "git", "url": "git+https://github.com/mcbbugu/runlock.git" },
+  "homepage": "https://github.com/mcbbugu/runlock#readme",
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "tsx --test test/parse.test.ts test/sbpl.test.ts",
+    "start": "tsx src/cli.ts",
+    "prepare": "tsc"
+  }
+}

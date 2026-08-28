@@ -1,0 +1,7 @@
+COMMAND   PID USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+node    12345 bugu  cwd    DIR    1,4      640    2 /Users/bugu/IndieHacker/demo
+node    12345 bugu  txt    REG    1,4  5000000  99 /usr/local/bin/node
+node    12345 bugu    3u  IPv4 0xabc      0t0  TCP 127.0.0.1:5173->142.250.185.142:443 (ESTABLISHED)
+node    12345 bugu    4u  IPv4 0xdef      0t0  TCP 127.0.0.1:5173->api.example.com:443 (ESTABLISHED)
+node    12345 bugu    5r   REG    1,4     100  11 /Users/bugu/.ssh/id_ed25519
+node    12345 bugu    6w   REG    1,4      20  12 /Users/bugu/IndieHacker/demo/out.txt
